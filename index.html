@@ -132,6 +132,35 @@
     .footer-brand { font-size: 11px; color: rgba(255,255,255,0.75); font-style: italic; font-weight: 600; }
     .footer-copy { font-size: 10px; color: rgba(255,255,255,0.5); }
 
+
+    /* BOUTON IMPRESSION */
+    .btn-print { background: #00BCD4; color: white; border: none; padding: 11px 26px; border-radius: 7px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-print:hover { background: #00a0b5; }
+    .actions-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+    .name-field { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .name-field label { font-size: 12px; font-weight: 600; color: #1D3058; }
+    .name-field input { font-family: 'Montserrat', sans-serif; font-size: 12px; padding: 9px 14px; border: 1.5px solid #d0dce8; border-radius: 7px; min-width: 240px; color: #1D3058; }
+    .name-field input:focus { outline: none; border-color: #00BCD4; }
+    #print-area { display: none; }
+
+    @media print {
+      @page { size: A4; margin: 14mm 12mm; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: white !important; }
+      .container, .no-print { display: none !important; }
+      #print-area { display: block !important; font-family: 'Montserrat', sans-serif; }
+      .print-header { background: #1D3058; color: white; padding: 22px 26px; border-radius: 10px; margin-bottom: 20px; }
+      .print-header .badge { display: inline-block; background: #00BCD4; color: white; font-size: 9px; font-weight: 700; letter-spacing: 1px; padding: 4px 12px; border-radius: 20px; margin-bottom: 10px; text-transform: uppercase; }
+      .print-header h1 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+      .print-header p { font-size: 11px; color: #b8cde8; }
+      .print-page-break { page-break-before: always; break-before: page; }
+      .print-section-title { font-size: 15px; font-weight: 700; color: #1D3058; border-bottom: 2px solid #00BCD4; padding-bottom: 6px; margin-bottom: 16px; }
+      .print-footer { background: #808080; color: white; padding: 10px 20px; margin-top: 24px; display: flex; justify-content: space-between; font-size: 10px; border-radius: 6px; }
+      .results-wrap, .plan-wrap { padding: 0 !important; }
+      .dim-result-item, .action-card, .sw-card, .score-hero, .action-dimension { page-break-inside: avoid; break-inside: avoid; }
+      .bar-fill { transition: none !important; }
+    }
+
     @media (max-width: 600px) {
       .container { margin: 0; border-radius: 0; }
       .hero, .intro-body, .intro-cta, .results-wrap, .plan-wrap { padding-left: 20px; padding-right: 20px; }
@@ -276,6 +305,8 @@
     </div>
   </div>
 </div>
+
+<div id="print-area"></div>
 
 <script>
   const dimensions = [
@@ -472,7 +503,8 @@
     const strengths = sorted.slice(0, 2);
     const weaknesses = sorted.slice(-2).reverse();
 
-    let html = '<div class="score-hero">'
+    let html = '<div class="name-field no-print"><label for="participant-name">Nom (facultatif, pour l\'impression) :</label><input type="text" id="participant-name" placeholder="Prénom Nom"></div>'
+      + '<div class="score-hero">'
       + '<div class="score-circle"><div class="score-num">' + total + '</div><div class="score-max">/ 100</div></div>'
       + '<div class="score-info"><h2>Votre profil de communicant managérial</h2><p>' + level.text + '</p>'
       + '<span class="level-badge" style="background:' + level.bg + ';color:' + level.color + ';">' + level.label + '</span>'
@@ -504,10 +536,11 @@
       + '</ul></div></div>';
 
     html += '<div class="results-note">Interprétation basée sur les travaux de l\'AFCI (2014), Floris (1997), Theodossopoulos (2023) et Talaera (2024).</div>';
-    html += '<div style="margin-top:20px;"><button class="btn-primary" onclick="switchTab(\'plan\')">Voir mon plan d\'action →</button></div>';
+    html += '<div class="actions-row no-print"><button class="btn-primary" onclick="switchTab(\'plan\')">Voir mon plan d\'action →</button><button class="btn-print" onclick="printReport()"><i class="ti ti-printer"></i> Imprimer mes résultats et mon plan</button></div>';
 
     document.getElementById('results-content').innerHTML = html;
     buildActionPlan(scores);
+    window.resultsReady = true;
     switchTab('results');
   }
 
@@ -535,7 +568,7 @@
       }
     };
 
-    let html = '<div class="plan-intro"><p><strong>Votre plan d\'action personnalisé</strong> est construit à partir de vos résultats. Il identifie pour chaque dimension une action prioritaire à mettre en œuvre, ainsi qu\'une action de valorisation de vos points forts. Les délais indicatifs sont donnés à titre de repère.</p></div>';
+    let html = '<div class="actions-row no-print" style="margin:0 0 20px;"><button class="btn-print" onclick="printReport()"><i class="ti ti-printer"></i> Imprimer mes résultats et mon plan</button></div><div class="plan-intro"><p><strong>Votre plan d\'action personnalisé</strong> est construit à partir de vos résultats. Il identifie pour chaque dimension une action prioritaire à mettre en œuvre, ainsi qu\'une action de valorisation de vos points forts. Les délais indicatifs sont donnés à titre de repère.</p></div>';
 
     dimensions.forEach(d => {
       const s = scores[d.id];
@@ -562,7 +595,32 @@
       + 'EM Lyon Business School. (2024). What does a communication manager do?'
       + '</p></div>';
 
+    html += '<div class="actions-row no-print"><button class="btn-print" onclick="printReport()"><i class="ti ti-printer"></i> Imprimer mes résultats et mon plan</button></div>';
     document.getElementById('plan-content').innerHTML = html;
+  }
+
+  function printReport() {
+    if (!window.resultsReady) {
+      alert("Complétez d'abord l'autodiagnostic pour pouvoir imprimer vos résultats.");
+      return;
+    }
+    const nameInput = document.getElementById('participant-name');
+    const name = nameInput ? nameInput.value.trim() : '';
+    const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const results = document.getElementById('results-content').innerHTML;
+    const plan = document.getElementById('plan-content').innerHTML;
+    const footer = '<div class="print-footer"><span style="font-weight:600;">Céline Cornet, ingénieure pédagogique</span><span style="font-style:italic;font-weight:600;">Phosphoria</span><span>© 2024</span></div>';
+
+    document.getElementById('print-area').innerHTML =
+      '<div class="print-header"><div class="badge">Autodiagnostic</div>'
+      + '<h1>Communication managériale — Mes résultats</h1>'
+      + '<p>' + (name ? name + ' · ' : '') + date + ' · Cadres de santé et médecins chefs de service</p></div>'
+      + '<div class="print-section-title">Analyse de mes résultats</div>' + results + footer
+      + '<div class="print-page-break"><div class="print-header"><div class="badge">Plan d\'action</div>'
+      + '<h1>Mon plan de développement</h1><p>' + (name ? name + ' · ' : '') + date + '</p></div>'
+      + plan + footer + '</div>';
+
+    window.print();
   }
 
   renderQuiz();
